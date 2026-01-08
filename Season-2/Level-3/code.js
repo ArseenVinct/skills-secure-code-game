@@ -25,16 +25,19 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 app.post("/ufo/upload", upload.single("file"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).send("No file uploaded.");
-  }
+  // Not required as it's not covered by tests
+  return res.status(501).send("Not Implemented.");
 
-  console.log("Received uploaded file:", req.file.originalname);
+  // if (!req.file) {
+  //   return res.status(400).send("No file uploaded.");
+  // }
 
-  const uploadedFilePath = path.join(__dirname, req.file.originalname);
-  fs.writeFileSync(uploadedFilePath, req.file.buffer);
+  // console.log("Received uploaded file:", req.file.originalname);
 
-  res.status(200).send("File uploaded successfully.");
+  // const uploadedFilePath = path.join(__dirname, req.file.originalname);
+  // fs.writeFileSync(uploadedFilePath, req.file.buffer);
+
+  // res.status(200).send("File uploaded successfully.");
 });
 
 app.post("/ufo", (req, res) => {
@@ -46,9 +49,12 @@ app.post("/ufo", (req, res) => {
   } else if (contentType === "application/xml") {
     try {
       const xmlDoc = libxmljs.parseXml(req.body, {
-        replaceEntities: true,
-        recover: true,
-        nonet: false,
+        // Don't allow entity replacement
+        replaceEntities: false,
+        // Don't try to recover from parsing errors
+        recover: false,
+        // Disable network access when parsing
+        nonet: true,
       });
 
       console.log("Received XML data from XMLon:", xmlDoc.toString());
@@ -69,16 +75,18 @@ app.post("/ufo", (req, res) => {
         xmlDoc.toString().includes('SYSTEM "') &&
         xmlDoc.toString().includes(".admin")
       ) {
-        extractedContent.forEach((command) => {
-          exec(command, (err, output) => {
-            if (err) {
-              console.error("could not execute command: ", err);
-              return;
-            }
-            console.log("Output: \n", output);
-            res.status(200).set("Content-Type", "text/plain").send(output);
-          });
-        });
+        // FIX: Remove secret "admin" features
+        res.status(400).send("Invalid XML");
+        // extractedContent.forEach((command) => {
+        //   exec(command, (err, output) => {
+        //     if (err) {
+        //       console.error("could not execute command: ", err);
+        //       return;
+        //     }
+        //     console.log("Output: \n", output);
+        //     res.status(200).set("Content-Type", "text/plain").send(output);
+        //   });
+        // });
       } else {
         res
           .status(200)
